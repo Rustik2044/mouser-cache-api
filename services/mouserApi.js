@@ -1,31 +1,17 @@
 const axios = require('axios');
 
 const searchPart = async (mpn) => {
-  try {
-    const response = await axios.post(
-      'https://api.mouser.com/api/v1/search/partnumber',
-      {
-        SearchByPartRequest: {
-          mouserPartNumber: mpn,
-          partSearchOptions: 'Exact',
-        },
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        params: {
-          apiKey: process.env.MOUSER_API_KEY,
-        },
-      }
-    );
+  const response = await axios.post('https://api.mouser.com/api/v1/search/partnumber', {
+    SearchByPartRequest: {
+      mouserPartNumber: mpn,
+      partSearchOptions: 'Exact',
+    },
+    apiKey: process.env.MOUSER_API_KEY,  // API-ключ ВНУТРИ тела запроса
+  }, {
+    headers: { 'Content-Type': 'application/json' }
+  });
 
-    return response.data;
-  } catch (err) {
-    console.error('Failed Mouser API call:', err.response?.data || err.message);
-    throw err;
-  }
+  return response.data;
 };
 
 module.exports = { searchPart };

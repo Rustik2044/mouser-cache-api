@@ -1,35 +1,30 @@
 const express = require('express');
 const router = express.Router();
 const { searchPart } = require('../services/mouserApi');
-const { normalizePartNumber, isValidResponse } = require('../utils/helpers');
-const { getFromCache, saveToCache } = require('../cache');
 
-// GET /mouser/search?part=CL05A475KP5NRNC
+// Вариант 1: ?part=...
 router.get('/search', async (req, res) => {
-  const mpnRaw = req.query.part;
-  if (!mpnRaw) {
-    return res.status(400).json({ error: 'Missing part number in query' });
-  }
-
-  const mpn = normalizePartNumber(mpnRaw);
-
-  // Check cache first
-  const cached = getFromCache(mpn);
-  if (cached) {
-    return res.json({ source: 'cache', ...cached });
-  }
+  const mpn = req.query.part;
+  if (!mpn) return res.status(400).json({ error: 'Missing part parameter' });
 
   try {
     const data = await searchPart(mpn);
-    if (!isValidResponse(data)) {
-      return res.status(404).json({ error: 'No results from Mouser' });
-    }
-
-    const partData = data.SearchResults.Parts[0]; // берём первый результат
-    saveToCache(mpn, { partData });
-    res.json({ source: 'mouser', partData });
+    res.json(data);
   } catch (error) {
-    console.error('Mouser API error:', error.message);
+    console.error('Mouser search failed:', error.message);
+    res.status(500).json({ error: 'Mouser API failed' });
+  }
+});
+
+// Вариант 2: /mouser/:mpn
+router.get('/:mpn', async (req, res) => {
+  const mpn = req.params.mpn;
+
+  try {
+    const data = await searchPart(mpn);
+    res.json(data);
+  } catch (error) {
+    console.error('Mouser direct search failed:', error.message);
     res.status(500).json({ error: 'Mouser API failed' });
   }
 });

@@ -7,7 +7,7 @@ const mouserRoutes = require('./routes/mouser');
 
 app.use(express.json());
 
-// Префикс /api для всех внешних API-интеграций
+// ✅ Используем нейтральный префикс для масштабируемости
 app.use('/api', mouserRoutes);
 
 const PORT = process.env.PORT || 3000;
